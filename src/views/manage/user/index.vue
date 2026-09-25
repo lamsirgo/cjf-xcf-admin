@@ -102,18 +102,27 @@ async function toggleStatus(row: AdminAccount) {
 }
 
 async function onResetPwd(row: AdminAccount) {
-  const { value } = await ElMessageBox.prompt(`为「${row.username}」设置新密码（6-32 位）`, '重置密码', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^.{6,32}$/,
-    inputErrorMessage: '密码长度 6-32 位'
-  });
+  let value: string;
+  try {
+    ({ value } = await ElMessageBox.prompt(`为「${row.username}」设置新密码（6-32 位）`, '重置密码', {
+      confirmButtonText: '确定',
+      cancelButtonText: '取消',
+      inputPattern: /^.{6,32}$/,
+      inputErrorMessage: '密码长度 6-32 位'
+    }));
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await resetAccountPwd(row.id, value);
   if (!error) ElMessage.success('密码已重置');
 }
 
 async function onDelete(row: AdminAccount) {
-  await ElMessageBox.confirm(`确认删除管理员「${row.username}」？`, '提示', { type: 'warning' });
+  try {
+    await ElMessageBox.confirm(`确认删除管理员「${row.username}」？`, '提示', { type: 'warning' });
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await deleteAccount(row.id);
   if (!error) {
     ElMessage.success('已删除');

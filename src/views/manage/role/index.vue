@@ -85,7 +85,11 @@ async function submit() {
 }
 
 async function onDelete(row: AdminRoleItem) {
-  await ElMessageBox.confirm(`确认删除角色「${row.name}」？`, '提示', { type: 'warning' });
+  try {
+    await ElMessageBox.confirm(`确认删除角色「${row.name}」？`, '提示', { type: 'warning' });
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await deleteRole(row.id);
   if (!error) {
     ElMessage.success('已删除');

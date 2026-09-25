@@ -62,7 +62,11 @@ function onSearch() {
 
 async function onToggle(row: AdminUser) {
   const action = row.status === 1 ? '禁用' : '启用';
-  await ElMessageBox.confirm(`确定${action}用户 ${row.mobile} 吗？`, '提示', { type: 'warning' });
+  try {
+    await ElMessageBox.confirm(`确定${action}用户 ${row.mobile} 吗？`, '提示', { type: 'warning' });
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await fetchToggleUser(row.id);
   if (!error) {
     ElMessage.success('已更新');
@@ -102,12 +106,21 @@ async function submitQuota() {
 
 // ---------- 重置密码 ----------
 async function onResetPwd(row: AdminUser) {
-  const { value } = await ElMessageBox.prompt(`为用户 ${row.mobile} 设置新密码（8-32 位，须同时含字母和数字）`, '重置密码', {
-    confirmButtonText: '确定',
-    cancelButtonText: '取消',
-    inputPattern: /^(?=.*[A-Za-z])(?=.*\d)\S{8,32}$/,
-    inputErrorMessage: '密码需 8-32 位，且须同时包含字母和数字'
-  });
+  let value: string;
+  try {
+    ({ value } = await ElMessageBox.prompt(
+      `为用户 ${row.mobile} 设置新密码（8-32 位，须同时含字母和数字）`,
+      '重置密码',
+      {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        inputPattern: /^(?=.*[A-Za-z])(?=.*\d)\S{8,32}$/,
+        inputErrorMessage: '密码需 8-32 位，且须同时包含字母和数字'
+      }
+    ));
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await fetchResetUserPwd(row.id, value);
   if (!error) ElMessage.success('密码已重置');
 }

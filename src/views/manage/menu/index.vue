@@ -125,7 +125,11 @@ async function submit() {
 }
 
 async function onDelete(row: SysMenuItem) {
-  await ElMessageBox.confirm(`确认删除「${row.title}」？有子项时需先删除子项。`, '提示', { type: 'warning' });
+  try {
+    await ElMessageBox.confirm(`确认删除「${row.title}」？有子项时需先删除子项。`, '提示', { type: 'warning' });
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await deleteMenu(row.id);
   if (!error) {
     ElMessage.success('已删除');

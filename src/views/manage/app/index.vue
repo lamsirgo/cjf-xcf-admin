@@ -181,7 +181,11 @@ async function submit() {
 }
 
 async function onDelete(row: AppItem) {
-  await ElMessageBox.confirm(`确认删除应用「${row.name}」？`, '提示', { type: 'warning' });
+  try {
+    await ElMessageBox.confirm(`确认删除应用「${row.name}」？`, '提示', { type: 'warning' });
+  } catch {
+    return; // 用户取消
+  }
   const { error } = await deleteApp(row.id);
   if (!error) {
     ElMessage.success('已删除');
