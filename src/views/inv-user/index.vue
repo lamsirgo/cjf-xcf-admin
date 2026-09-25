@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref } from 'vue';
+import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import {
@@ -20,9 +20,11 @@ const rows = ref<AdminUser[]>([]);
 const total = ref(0);
 const query = reactive({ page: 1, pageSize: 20, keywords: '' });
 let timer: number | undefined;
+let firstActivate = true;
 
-async function load() {
-  loading.value = true;
+// silent=true 为后台轮询：不翻转表格 loading，避免每 15 秒闪一次
+async function load(silent = false) {
+  if (!silent) loading.value = true;
   const { data, error } = await fetchAdminUsers({
     page: query.page,
     page_size: query.pageSize,
@@ -32,7 +34,25 @@ async function load() {
     rows.value = data.list;
     total.value = data.total;
   }
-  loading.value = false;
+  if (!silent) loading.value = false;
+}
+
+function stopTimer() {
+  if (timer !== undefined) {
+    window.clearInterval(timer);
+    timer = undefined;
+  }
+}
+
+function startTimer() {
+  stopTimer();
+  timer = window.setInterval(() => load(true), 15000);
+}
+
+// 浏览器标签隐藏时暂停轮询，可见时恢复
+function onVisibility() {
+  if (document.hidden) stopTimer();
+  else startTimer();
 }
 
 function onSearch() {
@@ -82,11 +102,11 @@ async function submitQuota() {
 
 // ---------- 重置密码 ----------
 async function onResetPwd(row: AdminUser) {
-  const { value } = await ElMessageBox.prompt(`为用户 ${row.mobile} 设置新密码（至少 6 位）`, '重置密码', {
+  const { value } = await ElMessageBox.prompt(`为用户 ${row.mobile} 设置新密码（8-32 位，须同时含字母和数字）`, '重置密码', {
     confirmButtonText: '确定',
     cancelButtonText: '取消',
-    inputPattern: /^.{6,32}$/,
-    inputErrorMessage: '密码长度 6-32 位'
+    inputPattern: /^(?=.*[A-Za-z])(?=.*\d)\S{8,32}$/,
+    inputErrorMessage: '密码需 8-32 位，且须同时包含字母和数字'
   });
   const { error } = await fetchResetUserPwd(row.id, value);
   if (!error) ElMessage.success('密码已重置');
@@ -94,9 +114,20 @@ async function onResetPwd(row: AdminUser) {
 
 onMounted(() => {
   load();
-  timer = window.setInterval(load, 15000);
+  startTimer();
+  document.addEventListener('visibilitychange', onVisibility);
 });
-onUnmounted(() => timer && clearInterval(timer));
+// keep-alive 切走即停轮询，切回静默刷新一次并恢复
+onActivated(() => {
+  startTimer();
+  if (!firstActivate) load(true);
+  firstActivate = false;
+});
+onDeactivated(stopTimer);
+onUnmounted(() => {
+  stopTimer();
+  document.removeEventListener('visibilitychange', onVisibility);
+});
 </script>
 
 <template>

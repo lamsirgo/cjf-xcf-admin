@@ -17,6 +17,7 @@ export interface AdminPackage {
   total_files: number;
   success_files: number;
   failed_files: number;
+  duplicate_files: number;
   status: number;
   status_text: string;
   error_msg: string;

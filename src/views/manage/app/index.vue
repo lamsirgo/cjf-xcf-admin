@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { computed, onMounted, reactive, ref } from 'vue';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import SvgIcon from '@/components/custom/svg-icon.vue';
@@ -81,8 +81,13 @@ async function loadUsers() {
 }
 
 // ---------- 行拖拽排序（原生 HTML5 DnD） ----------
+// 只有「全部应用一页可见且无搜索过滤」时才允许拖拽：否则提交的只是局部序号，
+// 会与其他页/被过滤掉的应用产生 sort 冲突，造成跨页错乱
+const dragEnabled = computed(() => !keywords.value.trim() && total.value <= pageSize.value && page.value === 1);
 const dragIndex = ref<number | null>(null);
+const dragSaving = ref(false);
 function onDragStart(index: number, e: DragEvent) {
+  if (!dragEnabled.value) return;
   dragIndex.value = index;
   if (e.dataTransfer) e.dataTransfer.effectAllowed = 'move';
 }
@@ -96,10 +101,15 @@ function onDragOver(index: number) {
 async function onDragEnd() {
   if (dragIndex.value === null) return;
   dragIndex.value = null;
+  dragSaving.value = true;
   const items = rows.value.map((r, i) => ({ id: r.id, sort: i + 1 }));
   const { error } = await sortApps(items);
+  dragSaving.value = false;
   if (!error) ElMessage.success('排序已保存');
-  else load();
+  else {
+    ElMessage.error('排序保存失败，已恢复原顺序');
+    load();
+  }
 }
 
 // ---------- 新增 / 编辑 ----------
@@ -205,12 +215,16 @@ onMounted(load);
       <el-button type="success" @click="openCreate">新增应用</el-button>
     </div>
 
-    <div v-loading="loading" class="app-card-grid">
+    <div v-if="!dragEnabled" class="mb-8px text-12px text-gray-400">
+      应用较多或处于搜索结果中，拖拽已禁用，请在编辑弹窗中调整排序数字。
+    </div>
+    <div v-loading="loading || dragSaving" class="app-card-grid">
       <div
         v-for="(row, index) in rows"
         :key="row.id"
         class="app-card"
-        draggable="true"
+        :class="{ dragging: dragIndex === index, 'no-drag': !dragEnabled }"
+        :draggable="dragEnabled"
         @dragstart="onDragStart(index, $event)"
         @dragover.prevent="onDragOver(index)"
         @dragend="onDragEnd"
@@ -398,6 +412,13 @@ onMounted(load);
 }
 .app-card:hover {
   box-shadow: var(--el-box-shadow-light);
+}
+.app-card.dragging {
+  opacity: 0.55;
+  box-shadow: var(--el-box-shadow-dark);
+}
+.app-card.no-drag {
+  cursor: default;
 }
 .card-header {
   display: flex;

@@ -1,40 +1,41 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
-import * as echarts from 'echarts';
+import { useEcharts, type ECOption } from '@/hooks/common/echarts';
 import { fetchDashboard, type DashboardData } from '@/service/api/system';
 
 defineOptions({ name: 'ManageDashboard' });
 
 const loading = ref(false);
 const data = ref<DashboardData | null>(null);
-const chartRef = ref<HTMLElement>();
+
+function buildOptions(d: DashboardData | null): ECOption {
+  const series = d?.series ?? [];
+  return {
+    tooltip: { trigger: 'axis' },
+    legend: { data: ['解析任务', '识别发票', '成功', '失败'], top: 0, left: 'center' },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
+    xAxis: { type: 'category', data: series.map(s => s.date.slice(5)) },
+    yAxis: [{ type: 'value' }],
+    series: [
+      { name: '解析任务', type: 'bar', data: series.map(s => s.packages), itemStyle: { color: '#409eff' } },
+      { name: '识别发票', type: 'bar', data: series.map(s => s.invoices), itemStyle: { color: '#67c23a' } },
+      { name: '成功', type: 'line', smooth: true, data: series.map(s => s.success), itemStyle: { color: '#85ce61' } },
+      { name: '失败', type: 'line', smooth: true, data: series.map(s => s.failed), itemStyle: { color: '#f56c6c' } }
+    ]
+  };
+}
+
+// 统一走 useEcharts：自动跟随明暗主题重建、容器尺寸变化 resize、组件卸载时 dispose
+const { domRef: chartRef, updateOptions } = useEcharts(() => buildOptions(data.value));
 
 async function load() {
   loading.value = true;
   const { data: d, error } = await fetchDashboard();
   if (!error && d) {
     data.value = d;
-    renderChart(d);
+    await updateOptions(() => buildOptions(d));
   }
   loading.value = false;
-}
-
-function renderChart(d: DashboardData) {
-  if (!chartRef.value) return;
-  const chart = echarts.init(chartRef.value);
-  chart.setOption({
-    tooltip: { trigger: 'axis' },
-    legend: { data: ['解析任务', '识别发票', '成功', '失败'], top: 0, left: 'center' },
-    grid: { left: '3%', right: '4%', bottom: '3%', top: 60, containLabel: true },
-    xAxis: { type: 'category', data: d.series.map(s => s.date.slice(5)) },
-    yAxis: [{ type: 'value' }],
-    series: [
-      { name: '解析任务', type: 'bar', data: d.series.map(s => s.packages), itemStyle: { color: '#409eff' } },
-      { name: '识别发票', type: 'bar', data: d.series.map(s => s.invoices), itemStyle: { color: '#67c23a' } },
-      { name: '成功', type: 'line', smooth: true, data: d.series.map(s => s.success), itemStyle: { color: '#85ce61' } },
-      { name: '失败', type: 'line', smooth: true, data: d.series.map(s => s.failed), itemStyle: { color: '#f56c6c' } }
-    ]
-  });
 }
 
 onMounted(load);

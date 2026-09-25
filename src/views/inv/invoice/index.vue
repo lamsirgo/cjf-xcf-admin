@@ -23,6 +23,7 @@ const query = reactive({
 const resultOptions = [
   { label: '全部结果', value: '' },
   { label: '成功', value: 'success' },
+  { label: '失败', value: 'failed' },
   { label: '被重复上传', value: 'duplicate' }
 ];
 
@@ -140,7 +141,7 @@ onMounted(load);
       <el-table-column prop="seller_name" label="销售方" min-width="180" show-overflow-tooltip />
       <el-table-column label="价税合计" width="110" align="right">
         <template #default="{ row }">
-          <span class="text-danger">¥{{ Number(row.total_amount).toFixed(2) }}</span>
+          <span class="text-error">¥{{ Number(row.total_amount ?? 0).toFixed(2) }}</span>
         </template>
       </el-table-column>
       <el-table-column label="重复上传" width="90" align="center">
@@ -182,7 +183,7 @@ onMounted(load);
         <el-descriptions-item label="发票类型" :span="2">{{ detail.invoice_type || '—' }}</el-descriptions-item>
         <el-descriptions-item label="开票日期">{{ fmtDate(detail.invoice_date) }}</el-descriptions-item>
         <el-descriptions-item label="价税合计">
-          <span class="text-danger font-600">¥{{ Number(detail.total_amount).toFixed(2) }}</span>
+          <span class="text-error font-600">¥{{ Number(detail.total_amount ?? 0).toFixed(2) }}</span>
         </el-descriptions-item>
         <el-descriptions-item label="购买方" :span="2">{{ detail.purchaser_name || '—' }}</el-descriptions-item>
         <el-descriptions-item label="购买方税号" :span="2">{{ detail.purchaser_register_num || '—' }}</el-descriptions-item>

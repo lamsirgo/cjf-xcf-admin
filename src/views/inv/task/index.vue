@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, reactive, ref, watch } from 'vue';
+import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
 import { fetchAdminPackages, type AdminPackage } from '@/service/api/inv';
 
 defineOptions({ name: 'InvTask' });
@@ -9,6 +9,7 @@ const rows = ref<AdminPackage[]>([]);
 const total = ref(0);
 const query = reactive({ page: 1, pageSize: 20, status: '' as number | '' });
 let timer: number | undefined;
+let firstActivate = true;
 
 const statusOptions: { label: string; value: number | '' }[] = [
   { label: '全部状态', value: '' },
@@ -27,8 +28,9 @@ const tagTypeMap: Record<number, 'primary' | 'warning' | 'success' | 'danger' | 
   4: 'danger'
 };
 
-async function load() {
-  loading.value = true;
+// silent=true 为后台轮询：不翻转表格 loading，避免每 10 秒闪一次
+async function load(silent = false) {
+  if (!silent) loading.value = true;
   const { data, error } = await fetchAdminPackages({
     page: query.page,
     page_size: query.pageSize,
@@ -38,7 +40,25 @@ async function load() {
     rows.value = data.list;
     total.value = data.total;
   }
-  loading.value = false;
+  if (!silent) loading.value = false;
+}
+
+function stopTimer() {
+  if (timer !== undefined) {
+    window.clearInterval(timer);
+    timer = undefined;
+  }
+}
+
+function startTimer() {
+  stopTimer();
+  timer = window.setInterval(() => load(true), 10000);
+}
+
+// 浏览器标签隐藏时暂停轮询，可见时恢复
+function onVisibility() {
+  if (document.hidden) stopTimer();
+  else startTimer();
 }
 
 watch(
@@ -51,9 +71,20 @@ watch(
 
 onMounted(() => {
   load();
-  timer = window.setInterval(load, 10000);
+  startTimer();
+  document.addEventListener('visibilitychange', onVisibility);
 });
-onUnmounted(() => timer && clearInterval(timer));
+// keep-alive 切走即停轮询，切回静默刷新一次并恢复，后台标签不再持续打接口
+onActivated(() => {
+  startTimer();
+  if (!firstActivate) load(true);
+  firstActivate = false;
+});
+onDeactivated(stopTimer);
+onUnmounted(() => {
+  stopTimer();
+  document.removeEventListener('visibilitychange', onVisibility);
+});
 </script>
 
 <template>
@@ -71,11 +102,15 @@ onUnmounted(() => timer && clearInterval(timer));
       <el-table-column prop="id" label="任务ID" width="90" />
       <el-table-column prop="user_id" label="用户ID" width="90" />
       <el-table-column prop="filename" label="文件名" min-width="200" show-overflow-tooltip />
-      <el-table-column label="识别结果" width="200">
+      <el-table-column label="识别结果" width="240">
         <template #default="{ row }">
           <span class="text-success">{{ row.success_files }} 成功</span>
           <span class="mx-4px">/</span>
-          <span :class="row.failed_files > 0 ? 'text-danger' : ''">{{ row.failed_files }} 失败</span>
+          <span :class="row.failed_files > 0 ? 'text-error' : ''">{{ row.failed_files }} 失败</span>
+          <template v-if="row.duplicate_files > 0">
+            <span class="mx-4px">/</span>
+            <span class="text-warning">{{ row.duplicate_files }} 重复</span>
+          </template>
           <span class="mx-4px">/</span>
           <span>共 {{ row.total_files }}</span>
         </template>
