@@ -217,7 +217,7 @@ onMounted(load);
       >
         <div class="card-header">
           <div class="flex items-center gap-8px">
-            <SvgIcon v-if="row.icon" :icon="`van:${row.icon}`" class="text-22px text-gray-500" />
+            <SvgIcon v-if="row.icon" :icon="`van:${row.icon}`" class="card-title-icon text-22px" />
             <span v-else class="app-icon">apps</span>
             <span class="font-medium text-14px truncate">{{ row.name }}</span>
           </div>
@@ -226,7 +226,7 @@ onMounted(load);
             <template #dropdown>
               <el-dropdown-menu>
                 <el-dropdown-item @click="openEdit(row)">编辑</el-dropdown-item>
-                <el-dropdown-item @click="onDelete(row)" style="color:#f56c6c">删除</el-dropdown-item>
+                <el-dropdown-item class="danger-item" @click="onDelete(row)">删除</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -245,7 +245,7 @@ onMounted(load);
           </div>
           <div class="card-row"><span class="label">默认</span>
             <el-tag v-if="row.is_default === 1" type="primary" size="small">默认</el-tag>
-            <span v-else class="text-gray-400">-</span>
+            <span v-else class="text-muted">-</span>
           </div>
         </div>
         <div class="card-sort">排序 {{ row.sort }}</div>
@@ -303,7 +303,7 @@ onMounted(load);
         </el-form-item>
         <el-form-item label="排序">
           <el-input-number v-model="form.sort" :min="0" :max="9999" />
-          <span class="ml-8px text-12px text-gray-400">数值小的在前，也可拖拽行调整</span>
+          <span class="ml-8px text-12px text-muted">数值小的在前，也可拖拽行调整</span>
         </el-form-item>
         <el-form-item label="可见范围">
           <el-radio-group v-model="form.visible_scope">
@@ -368,9 +368,18 @@ onMounted(load);
   height: 22px;
   padding: 0 6px;
   border-radius: 4px;
-  background: var(--n-color, #f2f3f5);
+  background: var(--el-fill-color-light);
   font-size: 11px;
-  color: #969799;
+  color: var(--el-text-color-secondary);
+}
+.card-title-icon {
+  color: var(--el-text-color-secondary);
+}
+.text-muted {
+  color: var(--el-text-color-placeholder);
+}
+.danger-item {
+  color: var(--el-color-danger);
 }
 .app-card-grid {
   display: grid;
@@ -379,8 +388,8 @@ onMounted(load);
   min-height: 200px;
 }
 .app-card {
-  background: #fff;
-  border: 1px solid #ebeef5;
+  background: var(--el-bg-color);
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 8px;
   padding: 12px 14px;
   cursor: move;
@@ -388,7 +397,7 @@ onMounted(load);
   user-select: none;
 }
 .app-card:hover {
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  box-shadow: var(--el-box-shadow-light);
 }
 .card-header {
   display: flex;
@@ -408,12 +417,12 @@ onMounted(load);
   font-size: 12px;
 }
 .card-row .label {
-  color: #909399;
+  color: var(--el-text-color-secondary);
   width: 48px;
   flex-shrink: 0;
 }
 .card-row .value {
-  color: #606266;
+  color: var(--el-text-color-regular);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -422,7 +431,7 @@ onMounted(load);
   margin-top: 8px;
   text-align: right;
   font-size: 11px;
-  color: #c0c4cc;
+  color: var(--el-text-color-placeholder);
 }
 .icon-grid {
   display: grid;
@@ -434,19 +443,19 @@ onMounted(load);
   align-items: center;
   justify-content: center;
   height: 34px;
-  border: 1px solid #ebeef5;
+  border: 1px solid var(--el-border-color-lighter);
   border-radius: 4px;
   font-size: 18px;
-  color: #606266;
+  color: var(--el-text-color-regular);
   cursor: pointer;
 }
 .icon-cell:hover {
-  color: #409eff;
-  border-color: #c6e2ff;
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary-light-5);
 }
 .icon-cell.active {
-  color: #409eff;
-  border-color: #409eff;
-  background: #ecf5ff;
+  color: var(--el-color-primary);
+  border-color: var(--el-color-primary);
+  background: var(--el-color-primary-light-9);
 }
 </style>

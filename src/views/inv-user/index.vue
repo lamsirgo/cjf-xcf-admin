@@ -9,8 +9,11 @@ import {
   fetchToggleUser,
   type AdminUser
 } from '@/service/api/inv';
+import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'InvUser' });
+
+const { hasAuth } = useAuth();
 
 const loading = ref(false);
 const rows = ref<AdminUser[]>([]);
@@ -128,11 +131,16 @@ onUnmounted(() => timer && clearInterval(timer));
       </el-table-column>
       <el-table-column label="操作" width="260" fixed="right" align="center">
         <template #default="{ row }">
-          <el-button size="small" type="primary" link @click="openQuota(row)">调额度</el-button>
-          <el-button size="small" link @click="onToggle(row)">
+          <el-button v-if="hasAuth('user_quota_adjust')" size="small" type="primary" link @click="openQuota(row)">
+            调额度
+          </el-button>
+          <el-button v-if="hasAuth('user_toggle')" size="small" link @click="onToggle(row)">
             {{ row.status === 1 ? '禁用' : '启用' }}
           </el-button>
-          <el-button size="small" type="warning" link @click="onResetPwd(row)">重置密码</el-button>
+          <el-button v-if="hasAuth('user_reset_password')" size="small" type="warning" link @click="onResetPwd(row)">
+            重置密码
+          </el-button>
+          <span v-if="!hasAuth(['user_quota_adjust', 'user_toggle', 'user_reset_password'])">—</span>
         </template>
       </el-table-column>
     </el-table>
