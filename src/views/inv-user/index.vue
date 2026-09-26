@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import { ElMessage, ElMessageBox } from 'element-plus';
 import type { FormInstance } from 'element-plus';
 import {
@@ -14,6 +15,7 @@ import { useAuth } from '@/hooks/business/auth';
 defineOptions({ name: 'InvUser' });
 
 const { hasAuth } = useAuth();
+const router = useRouter();
 
 const loading = ref(false);
 const rows = ref<AdminUser[]>([]);
@@ -79,9 +81,10 @@ const quotaVisible = ref(false);
 const quotaSubmitting = ref(false);
 const quotaFormRef = ref<FormInstance>();
 const quotaForm = reactive({ id: 0, mobile: '', change: 10, remark: '' });
+const quotaCurrentBalance = ref(0);
 const quotaRules = {
   change: [{ required: true, message: '请输入变动量', trigger: 'blur' }],
-  remark: [{ required: true, message: '请填写调整备注（记入流水）', trigger: 'blur' }]
+  remark: [{ required: true, message: '请填写调整备注（记入流水）', 'trigger': 'blur' }]
 };
 
 function openQuota(row: AdminUser) {
@@ -89,11 +92,25 @@ function openQuota(row: AdminUser) {
   quotaForm.mobile = row.mobile;
   quotaForm.change = 10;
   quotaForm.remark = '';
+  quotaCurrentBalance.value = row.quota_balance;
   quotaVisible.value = true;
 }
 
 async function submitQuota() {
   await quotaFormRef.value?.validate();
+  // 二次确认：回显当前余额、变动量与调整后余额，防止误操作
+  const after = quotaCurrentBalance.value + quotaForm.change;
+  try {
+    await ElMessageBox.confirm(
+      `当前可用额度：${quotaCurrentBalance.value} 次\n` +
+        `本次变动：${quotaForm.change > 0 ? '+' : ''}${quotaForm.change} 次\n` +
+        `调整后可用额度：${after} 次\n\n确认提交吗？`,
+      '额度调整确认',
+      { type: 'warning', confirmButtonText: '确认调整', cancelButtonText: '再想想' }
+    );
+  } catch {
+    return; // 用户取消
+  }
   quotaSubmitting.value = true;
   const { error } = await fetchAdjustQuota(quotaForm.id, quotaForm.change, quotaForm.remark);
   quotaSubmitting.value = false;
@@ -173,8 +190,11 @@ onUnmounted(() => {
       <el-table-column prop="created_at" label="注册时间" width="190">
         <template #default="{ row }">{{ row.created_at?.replace('T', ' ').slice(0, 19) }}</template>
       </el-table-column>
-      <el-table-column label="操作" width="260" fixed="right" align="center">
+      <el-table-column label="操作" width="320" fixed="right" align="center">
         <template #default="{ row }">
+          <el-button v-if="hasAuth('user_detail')" size="small" type="info" link @click="router.push(`/inv/user-detail/${row.id}`)">
+            详情
+          </el-button>
           <el-button v-if="hasAuth('user_quota_adjust')" size="small" type="primary" link @click="openQuota(row)">
             调额度
           </el-button>
@@ -184,7 +204,7 @@ onUnmounted(() => {
           <el-button v-if="hasAuth('user_reset_password')" size="small" type="warning" link @click="onResetPwd(row)">
             重置密码
           </el-button>
-          <span v-if="!hasAuth(['user_quota_adjust', 'user_toggle', 'user_reset_password'])">—</span>
+          <span v-if="!hasAuth(['user_detail', 'user_quota_adjust', 'user_toggle', 'user_reset_password'])">—</span>
         </template>
       </el-table-column>
     </el-table>

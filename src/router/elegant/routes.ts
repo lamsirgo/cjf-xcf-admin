@@ -139,8 +139,6 @@ export const generatedRoutes: GeneratedRoute[] = [
       i18nKey: 'route.manage',
       icon: 'carbon:cloud-service-management',
       order: 9,
-      // 系统管理（管理员/角色/菜单/应用/日志）后端全部为超管接口，
-      // 非超管角色不放行，避免出现"菜单可见但页面全 403"
       roles: ['R_SUPER']
     },
     children: [
@@ -153,6 +151,19 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.manage_app',
           icon: 'mdi:view-grid-outline',
           order: 4,
+          roles: ['R_SUPER'],
+          keepAlive: true
+        }
+      },
+      {
+        name: 'manage_config',
+        path: '/manage/config',
+        component: 'view.manage_config',
+        meta: {
+          title: 'manage_config',
+          i18nKey: 'route.manage_config',
+          icon: 'mdi:cog-outline',
+          order: 5,
           roles: ['R_SUPER'],
           keepAlive: true
         }

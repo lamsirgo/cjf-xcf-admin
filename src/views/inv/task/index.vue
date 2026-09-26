@@ -1,8 +1,17 @@
 <script setup lang="ts">
 import { onActivated, onDeactivated, onMounted, onUnmounted, reactive, ref, watch } from 'vue';
-import { fetchAdminPackages, type AdminPackage } from '@/service/api/inv';
+import { ElMessage, ElMessageBox } from 'element-plus';
+import {
+  fetchAdminPackages,
+  fetchRequeuePackage,
+  fetchTerminatePackage,
+  type AdminPackage
+} from '@/service/api/inv';
+import { useAuth } from '@/hooks/business/auth';
 
 defineOptions({ name: 'InvTask' });
+
+const { hasAuth } = useAuth();
 
 const loading = ref(false);
 const rows = ref<AdminPackage[]>([]);
@@ -85,6 +94,39 @@ onUnmounted(() => {
   stopTimer();
   document.removeEventListener('visibilitychange', onVisibility);
 });
+
+// ---------- 手动干预 ----------
+async function onRequeue(row: AdminPackage) {
+  try {
+    await ElMessageBox.confirm(`确定将任务 #${row.id} 重新投递吗？`, '重投确认', {
+      type: 'warning'
+    });
+  } catch {
+    return;
+  }
+  const { error } = await fetchRequeuePackage(row.id);
+  if (!error) {
+    ElMessage.success('已重新投递');
+    load();
+  }
+}
+
+async function onTerminate(row: AdminPackage) {
+  try {
+    await ElMessageBox.confirm(
+      `确定强制终止任务 #${row.id} 吗？\n剩余待解析文件将置失败，未消耗的冻结额度退回用户。`,
+      '终止确认',
+      { type: 'error', confirmButtonText: '强制终止' }
+    );
+  } catch {
+    return;
+  }
+  const { error } = await fetchTerminatePackage(row.id);
+  if (!error) {
+    ElMessage.success('已终止');
+    load();
+  }
+}
 </script>
 
 <template>
@@ -124,6 +166,20 @@ onUnmounted(() => {
       <el-table-column prop="error_msg" label="错误信息" min-width="200" show-overflow-tooltip />
       <el-table-column label="创建时间" width="190">
         <template #default="{ row }">{{ row.created_at?.replace('T', ' ').slice(0, 19) }}</template>
+      </el-table-column>
+      <el-table-column label="操作" width="150" fixed="right" align="center">
+        <template #default="{ row }">
+          <template v-if="row.status === 0 || row.status === 1">
+            <el-button v-if="hasAuth('task_requeue')" size="small" type="primary" link @click="onRequeue(row)">
+              重投
+            </el-button>
+            <el-button v-if="hasAuth('task_terminate')" size="small" type="danger" link @click="onTerminate(row)">
+              终止
+            </el-button>
+            <span v-if="!hasAuth(['task_requeue', 'task_terminate'])">—</span>
+          </template>
+          <span v-else>—</span>
+        </template>
       </el-table-column>
     </el-table>
 

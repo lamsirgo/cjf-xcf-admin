@@ -20,7 +20,9 @@ const moduleOptions = [
   { label: '应用', value: 'app' },
   { label: 'Banner', value: 'banner' },
   { label: '用户', value: 'user' },
-  { label: '额度', value: 'quota' }
+  { label: '额度', value: 'quota' },
+  { label: '任务', value: 'task' },
+  { label: '配置', value: 'config' }
 ];
 const actionOptions = [
   { label: '新增', value: 'create' },
@@ -28,7 +30,9 @@ const actionOptions = [
   { label: '删除', value: 'delete' },
   { label: '重置密码', value: 'reset-password' },
   { label: '启用/禁用', value: 'toggle' },
-  { label: '额度调整', value: 'adjust' }
+  { label: '额度调整', value: 'adjust' },
+  { label: '重投', value: 'requeue' },
+  { label: '终止', value: 'terminate' }
 ];
 
 async function load() {

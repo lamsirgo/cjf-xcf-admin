@@ -59,13 +59,87 @@ export function fetchResetUserPwd(userId: number, new_password: string) {
 }
 
 /** 全部解析任务 */
-export function fetchAdminPackages(params: { page: number; page_size: number; status?: number | null }) {
+export function fetchAdminPackages(params: {
+  page: number;
+  page_size: number;
+  status?: number | null;
+  user_id?: number;
+}) {
   // 过滤空值，避免 null 被序列化为空字符串触发后端 422
   const query: Record<string, number> = { page: params.page, page_size: params.page_size };
   if (params.status !== null && params.status !== undefined) {
     query.status = params.status;
   }
+  if (params.user_id !== null && params.user_id !== undefined) {
+    query.user_id = params.user_id;
+  }
   return request<PageData<AdminPackage>>({ url: '/admin/packages', method: 'get', params: query });
+}
+
+/** 任务重投 */
+export function fetchRequeuePackage(packageId: number) {
+  return request({ url: `/admin/packages/${packageId}/requeue`, method: 'post' });
+}
+
+/** 强制终止任务 */
+export function fetchTerminatePackage(packageId: number) {
+  return request({ url: `/admin/packages/${packageId}/terminate`, method: 'post' });
+}
+
+// ---------- 用户 360° 详情 ----------
+
+export interface User360Detail {
+  user: {
+    id: number;
+    mobile: string;
+    nickname: string;
+    email: string | null;
+    status: number;
+    created_at: string | null;
+    quota_balance: number;
+    quota_available: number;
+    quota_frozen: number;
+  };
+  stats: {
+    package_total: number;
+    package_queued: number;
+    package_parsing: number;
+    package_done: number;
+    package_partial: number;
+    package_failed: number;
+    file_success: number;
+    file_failed: number;
+    file_duplicate: number;
+    invoice_total: number;
+    invoice_amount_sum: number;
+  };
+}
+
+export function fetchUser360(userId: number) {
+  return request<User360Detail>({ url: `/admin/users/${userId}/detail`, method: 'get' });
+}
+
+export interface UserQuotaLog {
+  id: number;
+  change_type: number;
+  change_type_text: string;
+  change: number;
+  before: number;
+  after: number;
+  ref_id: number | null;
+  remark: string;
+  created_at: string | null;
+}
+
+export function fetchUserQuotaLogs(
+  userId: number,
+  params: { page: number; page_size?: number }
+) {
+  return request<{ list: UserQuotaLog[]; total: number; page: number; page_size: number }>({
+    url: `/admin/users/${userId}/quota-logs`,
+    method: 'get',
+    params
+  });
 }
 
 export interface AdminInvoice {

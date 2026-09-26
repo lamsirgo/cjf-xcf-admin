@@ -249,3 +249,23 @@ export function uploadImage(file: File) {
     headers: { 'Content-Type': 'multipart/form-data' }
   });
 }
+
+// ================= 系统配置 =================
+
+export interface SysConfigItem {
+  key: string;
+  label: string;
+  desc: string;
+  value_type: string;
+  value: string;
+  min: number;
+  max: number;
+}
+
+export function fetchConfigs() {
+  return request<{ list: SysConfigItem[] }>({ url: `${BASE}/configs`, method: 'get' });
+}
+
+export function updateConfigs(configs: { key: string; value: string }[]) {
+  return request({ url: `${BASE}/configs`, method: 'put', data: { configs } });
+}
