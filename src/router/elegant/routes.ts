@@ -60,7 +60,8 @@ export const generatedRoutes: GeneratedRoute[] = [
       title: 'inv',
       i18nKey: 'route.inv',
       icon: 'mdi:invoice-text-outline',
-      order: 1
+      order: 1,
+      roles: ['R_SUPER', 'R_ADMIN']
     },
     children: [
       {
@@ -72,6 +73,7 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.inv_dashboard',
           icon: 'mdi:chart-box-outline',
           order: 0,
+          roles: ['R_SUPER', 'R_ADMIN'],
           keepAlive: true
         }
       },
@@ -84,6 +86,7 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.inv_invoice',
           icon: 'mdi:receipt-text-outline',
           order: 2,
+          roles: ['R_SUPER', 'R_ADMIN'],
           keepAlive: true
         }
       },
@@ -96,6 +99,7 @@ export const generatedRoutes: GeneratedRoute[] = [
           i18nKey: 'route.inv_task',
           icon: 'mdi:file-document-multiple-outline',
           order: 1,
+          roles: ['R_SUPER', 'R_ADMIN'],
           keepAlive: true
         }
       }
@@ -110,6 +114,7 @@ export const generatedRoutes: GeneratedRoute[] = [
       i18nKey: 'route.inv-user',
       icon: 'mdi:account-group-outline',
       order: 2,
+      roles: ['R_SUPER', 'R_ADMIN'],
       keepAlive: true
     }
   },

@@ -204,6 +204,39 @@ export function fetchDashboard() {
   return request<DashboardData>({ url: '/admin/dashboard', method: 'get' });
 }
 
+// ================= OCR 运营监控 =================
+
+export interface OcrStatsData {
+  today: {
+    total: number;
+    success: number;
+    failed: number;
+    duplicate: number;
+    success_rate: number;
+  };
+  series: {
+    date: string;
+    total: number;
+    success: number;
+    success_rate: number | null;
+  }[];
+  error_codes: { name: string; count: number }[];
+  performance: {
+    p95_cost_seconds: number;
+    avg_cost_seconds: number;
+    p95_queue_seconds: number;
+  };
+  current: {
+    queued: number;
+    parsing: number;
+    token_cached: boolean;
+  };
+}
+
+export function fetchOcrStats() {
+  return request<OcrStatsData>({ url: '/admin/dashboard/ocr', method: 'get' });
+}
+
 // ================= 图片上传 =================
 
 export function uploadImage(file: File) {
