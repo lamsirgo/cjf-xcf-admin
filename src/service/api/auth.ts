@@ -37,7 +37,7 @@ export function fetchGetUserInfo() {
  * @param refreshToken 刷新令牌
  */
 export async function fetchRefreshToken(refreshToken: string) {
-  const res = await request<{ access_token: string }>({
+  const res = await request<{ access_token: string; refresh_token: string }>({
     url: '/auth/refresh',
     method: 'post',
     data: {
@@ -45,11 +45,11 @@ export async function fetchRefreshToken(refreshToken: string) {
     }
   });
 
-  // 后端只签发新 access token，refresh token 保持不变
+  // 后端采用 refresh 令牌轮换：每次刷新作废旧 refresh 并下发新令牌
   if (res.data) {
     res.data = {
       token: res.data.access_token,
-      refreshToken
+      refreshToken: res.data.refresh_token
     } as unknown as typeof res.data;
   }
   return res as unknown as { data: Api.Auth.LoginToken | null; error: any };

@@ -102,6 +102,18 @@ export const generatedRoutes: GeneratedRoute[] = [
           roles: ['R_SUPER', 'R_ADMIN'],
           keepAlive: true
         }
+      },
+      {
+        name: 'inv_user_detail',
+        path: '/inv/user-detail/:id',
+        component: 'view.inv_user_detail',
+        meta: {
+          title: 'inv_user_detail',
+          i18nKey: 'route.inv_user_detail',
+          roles: ['R_SUPER', 'R_ADMIN'],
+          hideInMenu: true,
+          activeMenu: 'inv-user'
+        }
       }
     ]
   },
