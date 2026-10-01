@@ -39,7 +39,7 @@ declare module "@elegant-router/types" {
     "inv_dashboard": "/inv/dashboard";
     "inv_invoice": "/inv/invoice";
     "inv_task": "/inv/task";
-    "inv_user_detail": "/inv/user-detail/:id";
+    "inv_user-detail": "/inv/user-detail/:id";
     "inv-user": "/inv-user";
     "login": "/login/:module(pwd-login|code-login|register|reset-pwd|bind-wechat)?";
     "manage": "/manage";
@@ -129,7 +129,7 @@ declare module "@elegant-router/types" {
     | "inv_dashboard"
     | "inv_invoice"
     | "inv_task"
-    | "inv_user_detail"
+    | "inv_user-detail"
     | "manage_app"
     | "manage_config"
     | "manage_log"

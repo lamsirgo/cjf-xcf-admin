@@ -318,7 +318,11 @@ export const useRouteStore = defineStore(SetupStoreId.Route, () => {
   }
 
   async function onRouteSwitchWhenLoggedIn() {
-    await authStore.initUserInfo();
+    // 用户信息在首次进入时已拉取（initAuthRoute），无需每次导航重复请求；
+    // 仅在 store 被重置（如登出后重新登录）尚未初始化时补拉
+    if (!authStore.userInfo.userId) {
+      await authStore.initUserInfo();
+    }
   }
 
   async function onRouteSwitchWhenNotLoggedIn() {

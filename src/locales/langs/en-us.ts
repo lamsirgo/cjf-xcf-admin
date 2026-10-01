@@ -175,7 +175,7 @@ const local: App.I18n.Schema = {
     inv_task: 'Parse Tasks',
     inv_invoice: 'Data Management',
     inv_dashboard: 'Dashboard',
-    inv_user_detail: 'User Detail',
+    'inv_user-detail': 'User Detail',
     'inv-user': 'Users',
     manage: 'System Manage',
     manage_user: 'Administrators',
