@@ -1,4 +1,4 @@
-import type { AxiosResponse } from 'axios';
+import type { AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 import { BACKEND_ERROR_CODE, createFlatRequest } from '@sa/axios';
 import { useAuthStore } from '@/store/modules/auth';
 import { getServiceBaseURL } from '@/utils/service';
@@ -92,11 +92,31 @@ export const request = createFlatRequest<App.Service.Response, any, RequestInsta
 
       return null;
     },
-    onError(error) {
-      // HTTP 401：token 无效(2004)或过期(2005)，统一回到登录页
+    async onError(error, instance) {
       const status = error.response?.status;
       const respCode = String(error.response?.data?.code ?? '');
-      if (status === 401 || respCode === '2004') {
+      const config = error.config as
+        | (InternalAxiosRequestConfig & { _tokenRetried?: boolean })
+        | undefined;
+      const isRefreshRequest = !!config?.url?.includes('/auth/refresh');
+      const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
+
+      if (status === 401 && config) {
+        // 2005 access token 过期且非刷新接口本身、且尚未重放过：
+        // 刷新令牌后用新 Authorization 重放原请求（单飞见 handleExpiredRequest）
+        if (expiredTokenCodes.includes(respCode) && !isRefreshRequest && !config._tokenRetried) {
+          config._tokenRetried = true;
+          const success = await handleExpiredRequest(request.state);
+          if (success) {
+            const Authorization = getAuthorization();
+            Object.assign(config.headers, { Authorization });
+            return instance.request(config) as Promise<AxiosResponse>;
+          }
+          // 刷新失败：handleRefreshToken 内部已 resetStore，静默返回
+          return;
+        }
+
+        // 2004 令牌无效 / 刷新接口自身 401 / 重放后仍 401：直接登出
         useAuthStore().resetStore();
         return;
       }
@@ -115,7 +135,6 @@ export const request = createFlatRequest<App.Service.Response, any, RequestInsta
       }
 
       // token 过期类错误不弹消息（已尝试刷新）
-      const expiredTokenCodes = import.meta.env.VITE_SERVICE_EXPIRED_TOKEN_CODES?.split(',') || [];
       if (expiredTokenCodes.includes(backendErrorCode)) {
         return;
       }

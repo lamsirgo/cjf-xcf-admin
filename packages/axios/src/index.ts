@@ -73,12 +73,16 @@ function createCommonRequest<
         response
       );
 
-      await opts.onError(backendError);
+      await opts.onError(backendError, instance);
 
       return Promise.reject(backendError);
     },
     async (error: AxiosError<ResponseData>) => {
-      await opts.onError(error);
+      // onError 可返回重放响应（如刷新令牌后重发原请求），此时以重放结果兑现调用
+      const retried = await opts.onError(error, instance);
+      if (retried) {
+        return retried;
+      }
 
       return Promise.reject(error);
     }

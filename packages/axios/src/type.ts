@@ -61,11 +61,17 @@ export interface RequestOption<
   /**
    * The hook to handle error
    *
-   * For example: You can show error message in this hook
+   * For example: You can show error message in this hook.
+   * Returning an AxiosResponse (e.g. replayed request after token refresh)
+   * resolves the original call with that response instead of rejecting.
    *
-   * @param error
+   * @param error axios error
+   * @param instance axios instance, used to replay the failed request
    */
-  onError: (error: AxiosError<ResponseData>) => void | Promise<void>;
+  onError: (
+    error: AxiosError<ResponseData>,
+    instance: AxiosInstance
+  ) => AxiosResponse | null | void | Promise<AxiosResponse | null | void>;
 }
 
 interface ResponseMap {
