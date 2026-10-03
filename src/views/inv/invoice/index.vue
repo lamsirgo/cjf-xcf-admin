@@ -3,8 +3,11 @@ import { onMounted, reactive, ref } from 'vue';
 import {
   fetchAdminInvoiceDetail,
   fetchAdminInvoices,
+  fetchInvoiceChangeLogs,
   type AdminInvoice,
-  type AdminInvoiceDetail
+  type AdminInvoiceDetail,
+  type InvoiceChangeEntry,
+  type InvoiceChangeLog
 } from '@/service/api/inv';
 
 defineOptions({ name: 'InvInvoice' });
@@ -34,7 +37,7 @@ const tagTypeMap: Record<number, 'success' | 'danger' | 'warning' | 'info'> = {
   0: 'info'
 };
 
-function fmtTime(s?: string) {
+function fmtTime(s?: string | null) {
   return s ? s.replace('T', ' ').slice(0, 19) : '';
 }
 
@@ -76,14 +79,31 @@ function onReset() {
 const detailVisible = ref(false);
 const detailLoading = ref(false);
 const detail = ref<AdminInvoiceDetail | null>(null);
+const logs = ref<InvoiceChangeLog[]>([]);
+const logsLoading = ref(false);
 
 async function showDetail(row: AdminInvoice) {
   detailVisible.value = true;
   detailLoading.value = true;
+  logsLoading.value = true;
   detail.value = null;
-  const { data, error } = await fetchAdminInvoiceDetail(row.id);
-  if (!error && data) detail.value = data;
+  logs.value = [];
+  const [detailRes, logsRes] = await Promise.all([
+    fetchAdminInvoiceDetail(row.id),
+    fetchInvoiceChangeLogs(row.id)
+  ]);
+  if (!detailRes.error && detailRes.data) detail.value = detailRes.data;
+  if (!logsRes.error && logsRes.data) logs.value = logsRes.data.list;
   detailLoading.value = false;
+  logsLoading.value = false;
+}
+
+/** 变更内容文案：字段修改展示 old→new；明细整体替换展示行数变化 */
+function changeText(c: InvoiceChangeEntry) {
+  if (c.field === 'items') {
+    return `${c.label}：${c.old_count ?? 0} 行 → ${c.new_count ?? 0} 行`;
+  }
+  return `${c.label}：${c.old || '（空）'} → ${c.new || '（空）'}`;
 }
 
 onMounted(load);
@@ -211,6 +231,31 @@ onMounted(load);
           <el-table-column prop="commodity_amount" label="金额" width="100" align="right" />
           <el-table-column prop="commodity_tax_rate" label="税率" width="80" align="center" />
         </el-table>
+
+        <div class="mb-10px mt-20px flex items-center justify-between">
+          <h4 class="m-0">变更记录（{{ logs.length }}）</h4>
+          <span class="text-12px text-gray-400">用户人工校正留痕，最多展示近 100 条</span>
+        </div>
+        <div v-loading="logsLoading">
+          <el-empty v-if="!logsLoading && logs.length === 0" description="暂无变更记录" :image-size="60" />
+          <el-timeline v-else>
+            <el-timeline-item
+              v-for="log in logs"
+              :key="log.id"
+              :timestamp="fmtTime(log.created_at)"
+              placement="top"
+              type="primary"
+            >
+              <div class="text-13px">
+                操作人：{{ log.user_mobile || '—' }}（ID: {{ log.user_id }}）
+                <span class="ml-8px text-gray-400">IP：{{ log.ip || '—' }}</span>
+              </div>
+              <div v-for="c in log.changes" :key="c.field" class="mt-4px text-13px">
+                {{ changeText(c) }}
+              </div>
+            </el-timeline-item>
+          </el-timeline>
+        </div>
       </template>
     </el-drawer>
   </div>

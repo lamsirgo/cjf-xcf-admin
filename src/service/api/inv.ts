@@ -204,3 +204,33 @@ export function fetchAdminInvoices(params: InvoiceQuery) {
 export function fetchAdminInvoiceDetail(id: number) {
   return request<AdminInvoiceDetail>({ url: `/admin/invoices/${id}`, method: 'get' });
 }
+
+/** 单条变更内容：字段修改 old→new，或明细行整体替换 old_count→new_count */
+export interface InvoiceChangeEntry {
+  field: string;
+  label: string;
+  old?: string;
+  new?: string;
+  old_count?: number;
+  new_count?: number;
+}
+
+/** 发票人工校正记录 */
+export interface InvoiceChangeLog {
+  id: number;
+  user_id: number;
+  user_mobile: string;
+  changes: InvoiceChangeEntry[];
+  /** 明细替换前快照（后台仅展示行数变化，不渲染快照内容） */
+  items_before: unknown[] | null;
+  ip: string;
+  created_at: string | null;
+}
+
+/** 发票变更记录（只读，最近 100 条） */
+export function fetchInvoiceChangeLogs(id: number) {
+  return request<{ list: InvoiceChangeLog[] }>({
+    url: `/admin/invoices/${id}/change-logs`,
+    method: 'get'
+  });
+}
