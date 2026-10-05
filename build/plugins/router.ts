@@ -35,6 +35,11 @@ export function setupElegantRouter() {
         return `/login/:module(${moduleReg})?`;
       }
 
+      // 用户详情为动态路由（目录页 + :id 参数），扫描只能得到 /inv/user-detail
+      if (key === 'inv_user-detail') {
+        return '/inv/user-detail/:id';
+      }
+
       return routePath;
     },
     onRouteMetaGen(routeName) {

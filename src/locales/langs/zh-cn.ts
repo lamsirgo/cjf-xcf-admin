@@ -184,6 +184,7 @@ const local: App.I18n.Schema = {
     manage_app: '应用管理',
     manage_config: '系统配置',
     manage_log: '操作日志',
+    manage_ops: '实时运维台',
     exception: '异常页',
     exception_403: '403',
     exception_404: '404',

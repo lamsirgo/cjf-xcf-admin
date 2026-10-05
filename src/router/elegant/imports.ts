@@ -24,11 +24,12 @@ export const views: Record<LastLevelRouteKey, RouteComponent | (() => Promise<Ro
   inv_dashboard: () => import("@/views/inv/dashboard/index.vue"),
   inv_invoice: () => import("@/views/inv/invoice/index.vue"),
   inv_task: () => import("@/views/inv/task/index.vue"),
-  "inv_user-detail": () => import("@/views/inv/user-detail.vue"),
+  "inv_user-detail": () => import("@/views/inv/user-detail/index.vue"),
   manage_app: () => import("@/views/manage/app/index.vue"),
   manage_config: () => import("@/views/manage/config/index.vue"),
   manage_log: () => import("@/views/manage/log/index.vue"),
   manage_menu: () => import("@/views/manage/menu/index.vue"),
+  manage_ops: () => import("@/views/manage/ops/index.vue"),
   manage_role: () => import("@/views/manage/role/index.vue"),
   manage_user: () => import("@/views/manage/user/index.vue"),
 };

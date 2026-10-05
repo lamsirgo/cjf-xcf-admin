@@ -47,6 +47,7 @@ declare module "@elegant-router/types" {
     "manage_config": "/manage/config";
     "manage_log": "/manage/log";
     "manage_menu": "/manage/menu";
+    "manage_ops": "/manage/ops";
     "manage_role": "/manage/role";
     "manage_user": "/manage/user";
   };
@@ -134,6 +135,7 @@ declare module "@elegant-router/types" {
     | "manage_config"
     | "manage_log"
     | "manage_menu"
+    | "manage_ops"
     | "manage_role"
     | "manage_user"
   >;

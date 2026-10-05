@@ -1,13 +1,13 @@
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import {
-  fetchAdminPackages,
-  fetchUser360,
-  fetchUserQuotaLogs,
   type AdminPackage,
   type User360Detail,
-  type UserQuotaLog
+  type UserQuotaLog,
+  fetchAdminPackages,
+  fetchUser360,
+  fetchUserQuotaLogs
 } from '@/service/api/inv';
 
 defineOptions({ name: 'InvUserDetail' });
@@ -86,38 +86,36 @@ onMounted(() => {
 
 <template>
   <div v-loading="loading" class="min-h-500px">
-    <el-page-header class="mb-16px" content="用户详情" @back="router.back()" />
+    <ElPageHeader class="mb-16px" content="用户详情" @back="router.back()" />
 
     <template v-if="detail">
       <!-- 基础信息 -->
-      <el-card shadow="never" class="mb-16px">
-        <el-descriptions :column="3" border>
-          <el-descriptions-item label="ID">{{ detail.user.id }}</el-descriptions-item>
-          <el-descriptions-item label="手机号">{{ detail.user.mobile }}</el-descriptions-item>
-          <el-descriptions-item label="昵称">{{ detail.user.nickname || '-' }}</el-descriptions-item>
-          <el-descriptions-item label="邮箱">{{ detail.user.email || '未绑定' }}</el-descriptions-item>
-          <el-descriptions-item label="状态">
-            <el-tag :type="detail.user.status === 1 ? 'success' : 'danger'">
+      <ElCard shadow="never" class="mb-16px">
+        <ElDescriptions :column="3" border>
+          <ElDescriptionsItem label="ID">{{ detail.user.id }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="手机号">{{ detail.user.mobile }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="昵称">{{ detail.user.nickname || '-' }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="邮箱">{{ detail.user.email || '未绑定' }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="状态">
+            <ElTag :type="detail.user.status === 1 ? 'success' : 'danger'">
               {{ detail.user.status === 1 ? '启用' : '禁用' }}
-            </el-tag>
-          </el-descriptions-item>
-          <el-descriptions-item label="注册时间">
+            </ElTag>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="注册时间">
             {{ detail.user.created_at?.replace('T', ' ').slice(0, 19) }}
-          </el-descriptions-item>
-          <el-descriptions-item label="总额度">{{ detail.user.quota_balance }}</el-descriptions-item>
-          <el-descriptions-item label="可用额度">{{ detail.user.quota_available }}</el-descriptions-item>
-          <el-descriptions-item label="冻结额度">{{ detail.user.quota_frozen }}</el-descriptions-item>
-        </el-descriptions>
-      </el-card>
+          </ElDescriptionsItem>
+          <ElDescriptionsItem label="总额度">{{ detail.user.quota_balance }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="可用额度">{{ detail.user.quota_available }}</ElDescriptionsItem>
+          <ElDescriptionsItem label="冻结额度">{{ detail.user.quota_frozen }}</ElDescriptionsItem>
+        </ElDescriptions>
+      </ElCard>
 
       <!-- 统计卡片 -->
       <div class="stat-grid mb-16px">
         <div class="stat-card">
           <div class="stat-value">{{ detail.stats.package_total }}</div>
           <div class="stat-label">解析任务总数</div>
-          <div class="stat-sub">
-            排队 {{ detail.stats.package_queued }} · 解析中 {{ detail.stats.package_parsing }}
-          </div>
+          <div class="stat-sub">排队 {{ detail.stats.package_queued }} · 解析中 {{ detail.stats.package_parsing }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-value text-success">{{ detail.stats.file_success }}</div>
@@ -142,26 +140,26 @@ onMounted(() => {
       </div>
 
       <!-- 额度流水 -->
-      <el-card shadow="never" class="mb-16px">
+      <ElCard shadow="never" class="mb-16px">
         <template #header>额度流水</template>
-        <el-table v-loading="logLoading" :data="logs" size="small" border stripe>
-          <el-table-column label="时间" width="170">
+        <ElTable v-loading="logLoading" :data="logs" size="small" border stripe>
+          <ElTableColumn label="时间" width="170">
             <template #default="{ row }">{{ row.created_at?.replace('T', ' ').slice(0, 19) }}</template>
-          </el-table-column>
-          <el-table-column prop="change_type_text" label="类型" width="100" />
-          <el-table-column label="变动" width="90" align="center">
+          </ElTableColumn>
+          <ElTableColumn prop="change_type_text" label="类型" width="100" />
+          <ElTableColumn label="变动" width="90" align="center">
             <template #default="{ row }">
               <span :class="row.change > 0 ? 'text-success' : row.change < 0 ? 'text-error' : ''">
                 {{ row.change > 0 ? '+' : '' }}{{ row.change }}
               </span>
             </template>
-          </el-table-column>
-          <el-table-column label="余额" width="130" align="center">
+          </ElTableColumn>
+          <ElTableColumn label="余额" width="130" align="center">
             <template #default="{ row }">{{ row.before }} → {{ row.after }}</template>
-          </el-table-column>
-          <el-table-column prop="remark" label="备注" min-width="200" show-overflow-tooltip />
-        </el-table>
-        <el-pagination
+          </ElTableColumn>
+          <ElTableColumn prop="remark" label="备注" min-width="200" show-overflow-tooltip />
+        </ElTable>
+        <ElPagination
           class="mt-12px justify-end"
           layout="total, prev, pager, next"
           :total="logTotal"
@@ -169,30 +167,29 @@ onMounted(() => {
           :current-page="logPage"
           @current-change="onLogPage"
         />
-      </el-card>
+      </ElCard>
 
       <!-- 近期任务 -->
-      <el-card shadow="never">
+      <ElCard shadow="never">
         <template #header>近期解析任务</template>
-        <el-table v-loading="pkgLoading" :data="packages" size="small" border stripe>
-          <el-table-column prop="id" label="任务ID" width="90" />
-          <el-table-column prop="filename" label="文件名" min-width="200" show-overflow-tooltip />
-          <el-table-column label="结果" width="200">
+        <ElTable v-loading="pkgLoading" :data="packages" size="small" border stripe>
+          <ElTableColumn prop="id" label="任务ID" width="90" />
+          <ElTableColumn prop="filename" label="文件名" min-width="200" show-overflow-tooltip />
+          <ElTableColumn label="结果" width="200">
             <template #default="{ row }">
-              {{ row.success_files }} 成功 / {{ row.failed_files }} 失败 /
-              {{ row.duplicate_files }} 重复
+              {{ row.success_files }} 成功 / {{ row.failed_files }} 失败 / {{ row.duplicate_files }} 重复
             </template>
-          </el-table-column>
-          <el-table-column label="状态" width="100">
+          </ElTableColumn>
+          <ElTableColumn label="状态" width="100">
             <template #default="{ row }">
-              <el-tag size="small">{{ row.status_text }}</el-tag>
+              <ElTag size="small">{{ row.status_text }}</ElTag>
             </template>
-          </el-table-column>
-          <el-table-column label="创建时间" width="170">
+          </ElTableColumn>
+          <ElTableColumn label="创建时间" width="170">
             <template #default="{ row }">{{ row.created_at?.replace('T', ' ').slice(0, 19) }}</template>
-          </el-table-column>
-        </el-table>
-        <el-pagination
+          </ElTableColumn>
+        </ElTable>
+        <ElPagination
           class="mt-12px justify-end"
           layout="total, prev, pager, next"
           :total="pkgTotal"
@@ -200,7 +197,7 @@ onMounted(() => {
           :current-page="pkgPage"
           @current-change="onPkgPage"
         />
-      </el-card>
+      </ElCard>
     </template>
   </div>
 </template>

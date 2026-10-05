@@ -184,6 +184,7 @@ const local: App.I18n.Schema = {
     manage_app: 'App Manage',
     manage_config: 'System Config',
     manage_log: 'Operation Logs',
+    manage_ops: 'Ops Live',
     exception: 'Exception',
     exception_403: '403',
     exception_404: '404',

@@ -207,6 +207,19 @@ export const generatedRoutes: GeneratedRoute[] = [
         }
       },
       {
+        name: 'manage_ops',
+        path: '/manage/ops',
+        component: 'view.manage_ops',
+        meta: {
+          title: 'manage_ops',
+          i18nKey: 'route.manage_ops',
+          icon: 'mdi:monitor-eye',
+          order: 0,
+          roles: ['R_SUPER'],
+          keepAlive: true
+        }
+      },
+      {
         name: 'manage_role',
         path: '/manage/role',
         component: 'view.manage_role',
